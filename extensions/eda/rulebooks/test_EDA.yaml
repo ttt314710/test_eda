@@ -10,7 +10,7 @@
 
   rules:
     - name: Run Job Template
-      condition: event.source.name == "webhook Stream"
+      condition: event.payload.action == "run_job"
       action:
         run_job_template:
           name: "first_template"
