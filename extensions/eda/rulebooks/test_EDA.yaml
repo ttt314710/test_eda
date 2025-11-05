@@ -11,7 +11,8 @@
   rules:
     - name: Run Job Template
       condition: event.payload.action == "run_job"
-      action:
-          debug:
-            msg: "Message: ###### {{ event.payload }}"
+            action:
+        run_job_template:
+          name: "Minimal Tamplate"
+          organization: testorg
 
