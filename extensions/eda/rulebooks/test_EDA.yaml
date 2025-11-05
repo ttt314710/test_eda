@@ -12,10 +12,6 @@
     - name: Run Job Template
       condition: event.payload.action == "run_job"
       action:
-        run_job_template:
-          name: first_template
-          organization: testorg
-      action:
           debug:
             msg: "Message: ###### {{ event.payload }}"
 
