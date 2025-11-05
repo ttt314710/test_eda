@@ -9,6 +9,12 @@
       port: 5003
 
   rules:
+    - name: Run Job Template Minimal Tamplate
+      condition: event.source.name == "webhook Stream"
+      action:
+        run_job_template:
+          name: 'Minimal Tamplate'
+          organization: testorg
     - name: Run Job Template
       condition: event.payload.action == "run_job"
       action:
