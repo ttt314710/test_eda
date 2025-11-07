@@ -10,9 +10,13 @@
 
   rules:
     - name: Run Job Template
-      condition: event.payload.action == "run_job"
+      condition: event.payload.sr_number is defined
       action:
         run_job_template:
-          name: "first_template"
-          organization: testorg
+          name: "Fetch_SR_Details_SG"
+          organization: Prudential
+          job_args:
+            execution_mode: "asynchronous"
+            extra_vars:
+              sr_number: "{{ event.payload.sr_number }}"
 
