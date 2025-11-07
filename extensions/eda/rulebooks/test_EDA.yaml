@@ -13,6 +13,8 @@
       condition: event.payload.action == "run_job"
       action:
         run_job_template:
-          name: "first_template"
+          name: "Pause for 5 mins"
           organization: testorg
+          job_args:
+            execution_mode: "asynchronous"
 
