@@ -1,0 +1,183 @@
+VSGRHOWPSCP01
+https://stackoverflow.com/questions/79115944/unable-to-get-deployment-status-of-devices-in-sccm-via-powershell
+
+ansible-galaxy collection install ansible.windows
+
+New-PSDrive -Name RT1 -PSProvider AdminUI.PS.Provider\CMSite -Root VSGRHOWPSCP01
+
+Remove-CMDeviceCollectionDirectMembershipRule -CollectionName "CrowdStrike_Splunk_On-Prem_PACS" -ResourceId 2097389004 -Force
+
+Remove-CMDeviceCollectionDirectMembershipRule -CollectionName "On-Prem-PROD: Operation Readiness" -ResourceId 2097389004 -Force
+
+
+$ResourceID = (Get-CMResource -ResourceType System -Fast | Where-Object { $_.Name -eq "VSGRHOWPANS01" }).ResourceID
+Import-Module "C:\Program Files (x86)\Microsoft Configuration Manager\AdminConsole\bin\ConfigurationManager.psd1"
+
+Get-CMCollectionMember -CollectionName $CollectionName | Where-Object { $_.Name -eq "Device01" }
+
+
+ansible-playbook sccm_onboarding_windows.yaml -i VSGRHOWPANS01, -e "ansible_connection=winrm ansible_winrm_transport=ntlm ansible_user=PRUASIA\\SRVPSSAPRANSIBLEAU01 ansible_password=kt9T73#Z ansible_port=5985 ansible_winrm_server_cert_validation=ignore device_name=VSGRHOWPANS01 ansible_winrm_scheme=http"
+
+ansible-playbook sccm_onboarding_windows.yaml -e "automation_windows_server_vcenter_name=vsgrhowpvcs02.pru.intranet.asia automation_windows_server_vcenter_username=PRUASIA\\SRVPSSAPRANSIBLEAU01 automation_windows_server_vcenter_password=kt9T73#Z automation_windows_server_vm_username=PRUASIA\\SRVPSSAPRANSIBLEAU01 automation_windows_server_vm_password=kt9T73#Z automation_windows_server_datacenter_name=SGDC02 device_name=VSGRHOWDANS01 automation_windows_server_hostname=VSGRHOWPANS01 sccm_site_code=RT1 Qualys_ForcePoint_Collection='On-Prem-PROD: Operation Readiness' CrowdStrike_Splunk_Collection='CrowdStrike_Splunk_On-Prem_' LBU=PACS"
+
+ansible-playbook sccm.yaml -e "automation_windows_server_vcenter_name=vsgrhowpvcs02.pru.intranet.asia automation_windows_server_vcenter_username=PRUASIA\\SRVPSSAPRANSIBLEAU01 automation_windows_server_vcenter_password=kt9T73#Z automation_windows_server_vm_username=PRUASIA\\SRVPSSAPRANSIBLEAU01 automation_windows_server_vm_password=kt9T73#Z automation_windows_server_datacenter_name=SGDC02 device_name=VSGRHOWDANS01 automation_windows_server_hostname=VSGRHOWPANS01 sccm_site_code=RT1 SCCM_Collection='CrowdStrike_Splunk_On_Prem_' LBU=PSS"
+
+
+ansible-playbook sccm_onboarding.yaml \
+  -e '{
+        "sr_number": "02446413",
+        "remedyforce_api_url": "https://test.salesforce.com/services/Soap/u/35.0",
+        "remedyforce_username": "subashchandra.behera@prudential.com.sg.rfuat",
+        "remedyforce_password": "Susmita@093AuQBzAnIDzjYRK9aZ24oHrf",
+        "remedyforce_fetch_sr_url": "https://prudentialservices--rfuat.sandbox.my.salesforce.com/services/data/v35.0/query?q=SELECT%20Id%2CName%2CBMCServiceDesk__FKIncident__c%2CSummary__c%2CBMCServiceDesk__incidentDescription__c%2CBMCServiceDesk__incidentResolution__c%2CAffected_Business_Units__c%2CBMCServiceDesk__Status_ID__c%20FROM%20BMCServiceDesk__Incident__c%20WHERE%20Name%3D%27{{sr_number}}%27"
+      }'
+
+### SCCM ansible execution command
+
+ansible-playbook sccm_onboarding.yaml \
+  -e '{
+        "task_number": "00191349",
+        "remedyforce_api_url": "https://test.salesforce.com/services/Soap/u/35.0",
+        "remedyforce_username": "subashchandra.behera@prudential.com.sg.rfuat",
+        "remedyforce_password": "Susmita@093AuQBzAnIDzjYRK9aZ24oHrf",
+        "remedyforce_fetch_task_url": "https://prudentialservices--rfuat.sandbox.my.salesforce.com/services/data/v35.0/query?q=SELECT%20Id%2CName%2CTask_Summary__c%2CBMCServiceDesk__taskResolution__c%2CBMCServiceDesk__Status_ID__c%2CBMCServiceDesk__taskDescription__c%2CBMCServiceDesk__FKChange__c%20FROM%20BMCServiceDesk__Task__c%20WHERE%20Name%3D%27{{task_number}}%27",
+        "remedyforce_fetch_cr_url": "https://prudentialservices--rfuat.sandbox.my.salesforce.com/services/data/v35.0/query?q=SELECT+Id%2CName%2CBMCServiceDesk__taskDescription__c%2CBMCServiceDesk__taskResolution__c%2CTask_Summary__c%2CBMCServiceDesk__FKChange__c+FROM+BMCServiceDesk__Task__c+WHERE+BMCServiceDesk__FKChange__c%3D%27{{ task_parent_task_number }}%27",
+        "remedyforce_add_Note_url": "https://prudentialservices--rfuat.sandbox.my.salesforce.com/services/data/v35.0/sobjects/Note",
+        "remedyforce_url": "https://prudentialservices--rfuat.sandbox.my.salesforce.com",
+        "manual_queue_group_id": "00GMR000000Aa2D2AS",
+        "automation_windows_server_vcenter_name": "vsgrhowpvcs02.pru.intranet.asia",
+        "automation_windows_server_vcenter_username": "PRUASIA\\SRVPSSAPRANSIBLEAU01",
+        "automation_windows_server_vcenter_password": "kt9T73#Z",
+        "automation_windows_server_vm_username": "PRUASIA\\SRVPSSAPRANSIBLEAU01",
+        "automation_windows_server_vm_password": "kt9T73#Z",
+        "automation_windows_server_datacenter_name": "SGDC02",
+        "automation_windows_server_hostname": "VSGRHOWPANS01",
+        "sccm_site_code": "RT1",
+        "SCCM_Collection": "CrowdStrike_Splunk_On_Prem_"
+      }'
+
+ansible-playbook trigger_sccm_policy.yaml \
+  -e '{
+        "vcenter_name": "vsgrhowpvcs02.pru.intranet.asia",
+        "automation_windows_server_vcenter_username": "PRUASIA\\SRVPSSAPRANSIBLEAU01",
+        "automation_windows_server_vcenter_password": "kt9T73#Z",
+        "onboarded_device_admin_username": ".\\pruadmin",
+        "onboarded_device_admin_password": "Swat2007",
+        "device_name": "VSGPCAWDEVAAP01",
+        "datacenter_name": "SGDC02"
+      }'
+
+### CrowdStrike ansible execution command
+
+ansible-playbook crowdstrike_onboarding.yaml \
+  -e '{
+        "task_number": "00191669",
+        "remedyforce_api_url": "https://test.salesforce.com/services/Soap/u/35.0",
+        "remedyforce_username": "subashchandra.behera@prudential.com.sg.rfuat",
+        "remedyforce_password": "Susmita@093AuQBzAnIDzjYRK9aZ24oHrf",
+        "remedyforce_fetch_task_url": "https://prudentialservices--rfuat.sandbox.my.salesforce.com/services/data/v35.0/query?q=SELECT%20Id%2CName%2CTask_Summary__c%2CBMCServiceDesk__taskResolution__c%2CBMCServiceDesk__Status_ID__c%2CBMCServiceDesk__taskDescription__c%2CBMCServiceDesk__FKChange__c%20FROM%20BMCServiceDesk__Task__c%20WHERE%20Name%3D%27{{task_number}}%27",
+        "remedyforce_add_Note_url": "https://prudentialservices--rfuat.sandbox.my.salesforce.com/services/data/v35.0/sobjects/Note",
+        "remedyforce_url": "https://prudentialservices--rfuat.sandbox.my.salesforce.com",
+        "manual_queue_group_id": "00GMR000000Aa2D2AS",
+        "automation_windows_server_vcenter_name": "vsgrhowpvcs02.pru.intranet.asia",
+        "automation_windows_server_vcenter_username": "PRUASIA\\SRVPSSAPRANSIBLEAU01",
+        "automation_windows_server_vcenter_password": "kt9T73#Z",
+        "automation_windows_server_vm_username": "PRUASIA\\SRVPSSAPRANSIBLEAU01",
+        "automation_windows_server_vm_password": "kt9T73#Z",
+        "automation_windows_server_datacenter_name": "SGDC02",
+        "automation_windows_server_hostname": "VSGRHOWPANS01",
+        "crowdstrike_service_name": "CSFalconService"
+      }'
+
+### ForcePoint ansible execution command
+
+ansible-playbook forcepoint_onboarding.yaml \
+  -e '{
+        "task_number": "00191669",
+        "remedyforce_api_url": "https://test.salesforce.com/services/Soap/u/35.0",
+        "remedyforce_username": "subashchandra.behera@prudential.com.sg.rfuat",
+        "remedyforce_password": "Susmita@093AuQBzAnIDzjYRK9aZ24oHrf",
+        "remedyforce_fetch_task_url": "https://prudentialservices--rfuat.sandbox.my.salesforce.com/services/data/v35.0/query?q=SELECT%20Id%2CName%2CTask_Summary__c%2CBMCServiceDesk__taskResolution__c%2CBMCServiceDesk__Status_ID__c%2CBMCServiceDesk__taskDescription__c%2CBMCServiceDesk__FKChange__c%20FROM%20BMCServiceDesk__Task__c%20WHERE%20Name%3D%27{{task_number}}%27",
+        "remedyforce_add_Note_url": "https://prudentialservices--rfuat.sandbox.my.salesforce.com/services/data/v35.0/sobjects/Note",
+        "remedyforce_url": "https://prudentialservices--rfuat.sandbox.my.salesforce.com",
+        "manual_queue_group_id": "00GMR000000Aa2D2AS",
+        "automation_windows_server_vcenter_name": "vsgrhowpvcs02.pru.intranet.asia",
+        "automation_windows_server_vcenter_username": "PRUASIA\\SRVPSSAPRANSIBLEAU01",
+        "automation_windows_server_vcenter_password": "kt9T73#Z",
+        "automation_windows_server_vm_username": "PRUASIA\\SRVPSSAPRANSIBLEAU01",
+        "automation_windows_server_vm_password": "kt9T73#Z",
+        "automation_windows_server_datacenter_name": "SGDC02",
+        "automation_windows_server_hostname": "VSGRHOWPANS01",
+        "forcepoint_service_name": "Fppsvc"
+      }'
+
+
+### CrowdStrike ansible Unix execution command
+
+ansible-playbook crowdstrike_onboarding.yaml \
+  -e '{
+        "task_number": "00191717",
+        "remedyforce_username": "subashchandra.behera@prudential.com.sg.rfuat",
+        "remedyforce_password": "Susmita@093AuQBzAnIDzjYRK9aZ24oHrf",
+        "automation_windows_server_vcenter_username": "PRUASIA\\SRVPSSAPRANSIBLEAU01",
+        "automation_windows_server_vcenter_password": "kt9T73#Z",
+        "onboarded_device_admin_username": "root",
+        "onboarded_device_admin_password": "redhat",
+        "ansible_python_interpreter": "/usr/bin/python3.12"
+      }'
+
+### OS Basic Config ansible Unix execution command
+
+ansible-playbook os_basic_unix_onboarding.yaml \
+  -e '{
+        "task_number": "00191720",
+        "remedyforce_username": "subashchandra.behera@prudential.com.sg.rfuat",
+        "remedyforce_password": "Susmita@093AuQBzAnIDzjYRK9aZ24oHrf",
+        "automation_windows_server_vcenter_username": "PRUASIA\\SRVPSSAPRANSIBLEAU01",
+        "automation_windows_server_vcenter_password": "kt9T73#Z",
+        "onboarded_device_admin_username": "root",
+        "onboarded_device_admin_password": "redhat",
+        "srvcscan_pwd": "Gr#7L1k3",
+        "controlm_pwd": "Su#01234",
+        "patrol_pwd": "L0tusR3nault",
+        "cybr_rid_pwd": "Cybrv!d3",
+        "padmin_pwd": "today@123",
+        "pshoot_pwd": "TeamW0rk",
+        "secadm_pwd": "Ybc7G79@#",
+        "bmcdscvr_pwd": 'Hlx#$12O',
+        "ansible_python_interpreter": "/usr/bin/python3.11"
+      }'
+
+---
+- name: Manage SCCM tasks
+  hosts: sccm_console_server
+  gather_facts: no
+  tasks:
+    - name: Add device to SCCM collection
+      ansible.windows.win_shell: |
+        Import-Module ($Env:SMS_ADMIN_UI_PATH.Substring(0,$Env:SMS_ADMIN_UI_PATH.Length-5) + '\ConfigurationManager.psd1')
+        cd "X:\\"  # Replace with your SCCM site code drive
+        Add-CMDeviceCollectionDirectMembershipRule -CollectionName "YourCollectionName" -ResourceName "{{ device_name }}"
+
+    - name: Check deployment status
+      ansible.windows.win_shell: |
+        Import-Module ($Env:SMS_ADMIN_UI_PATH.Substring(0,$Env:SMS_ADMIN_UI_PATH.Length-5) + '\ConfigurationManager.psd1')
+        cd "X:\\"  # Replace with your SCCM site code drive
+        Get-CMDeploymentStatus -CollectionName "YourCollectionName" | Where-Object { $_.MachineName -eq "{{ device_name }}" }
+      register: deployment_status
+
+    - debug:
+        var: deployment_status.stdout
+
+After adding the device to collection, below commands needs to be executed in the device:
+Set-ExecutionPolicy -ExecutionPolicy Bypass
+Invoke-WmiMethod -Class SMS_Client -Namespace root/ccm -Name TriggerSchedule "{00000000-0000-0000-0000-000000000021}"  #Machine Policy Retrieval Cycle
+Invoke-WmiMethod -Class SMS_Client -Namespace root/ccm -Name TriggerSchedule "{00000000-0000-0000-0000-000000000001}" #Hardware Inventory 
+Invoke-WmiMethod -Class SMS_Client -Namespace root/ccm -Name TriggerSchedule "{00000000-0000-0000-0000-000000000002}" #Software Inventory 
+Invoke-WmiMethod -Class SMS_Client -Namespace root/ccm -Name TriggerSchedule "{ 00000000-0000-0000-0000-000000000021}" #Machine Policy Assignment Request
+Invoke-WmiMethod -Class SMS_Client -Namespace root/ccm -Name TriggerSchedule "{00000000-0000-0000-0000-000000000022}" #Machine Policy Evaluation 
+Invoke-WmiMethod -Class SMS_Client -Namespace root/ccm -Name TriggerSchedule "{00000000-0000-0000-0000-000000000108}" #Software Update Deployment  
+Invoke-WmiMethod -Class SMS_Client -Namespace root/ccm -Name TriggerSchedule "{00000000-0000-0000-0000-000000000113}" #Software Update Scan
+Invoke-WmiMethod -Class SMS_Client -Namespace root/ccm -Name TriggerSchedule "{ 00000000-0000-0000-0000-000000000114}" #Software Update Deployment Re-eval 
+Invoke-WmiMethod -Class SMS_Client -Namespace root/ccm -Name TriggerSchedule "{00000000-0000-0000-0000-000000000121}" #Application deployment evaluation cycle 
+Invoke-WmiMethod -Class SMS_Client -Namespace root/ccm -Name TriggerSchedule "{ 00000000-0000-0000-0000-000000000027}" #User policy evaluation cycle
